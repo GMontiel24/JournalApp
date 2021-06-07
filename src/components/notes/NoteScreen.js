@@ -1,7 +1,33 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { NotesAppBar } from './NotesAppBar';
+import { useForm } from '../../hooks/useForm';
+import { activeNote, startDeleting } from '../../actions/notes';
 
 export const NoteScreen = () => {
+
+    const dispatch = useDispatch();
+    const { active: note } = useSelector(state => state.notes);
+    const [formValues, handleInputChange, reset] = useForm(note);
+    const { body, title, id } = formValues;
+
+    const activeId = useRef(note.id);
+
+    useEffect(() => {
+        if (note.id !== activeId.current) {
+            reset(note);
+            activeId.current = note.id;
+        }
+    }, [note, reset])
+
+    useEffect(() => {
+        dispatch(activeNote(formValues.id, formValues));
+    }, [formValues, dispatch])
+
+    const handleDelete = () => {
+        dispatch(startDeleting(id));
+    }
+
     return (
         <div className="notes__main-content">
 
@@ -10,22 +36,37 @@ export const NoteScreen = () => {
             <div className="notes__content">
 
                 <input
+                    name="title"
                     type="text"
                     placeholder="Some awesome title"
                     className="notes__title-input"
                     autoComplete="off"
+                    value={title}
+                    onChange={handleInputChange}
                 />
 
                 <textarea
+                    name="body"
                     placeholder="What happened today"
-                    className="notes__textarea" />
+                    className="notes__textarea"
+                    value={body}
+                    onChange={handleInputChange} />
 
-                <div className="notes__image">
-                    <img src="https://st.depositphotos.com/1428083/2946/i/600/depositphotos_29460297-stock-photo-bird-cage.jpg"
-                        alt="img" />
-                </div>
+                {
+                    (note.url) &&
+                    <div className="notes__image">
+                        <img src={note.url}
+                            alt="img" />
+                    </div>
+                }
 
             </div>
+
+            <button
+                className="btn btn-danger"
+                onClick={handleDelete}>
+                Delete
+            </button>
 
         </div>
     )
